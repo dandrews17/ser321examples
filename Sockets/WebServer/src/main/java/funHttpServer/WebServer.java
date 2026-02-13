@@ -27,7 +27,7 @@ import java.util.LinkedHashMap;
 import java.nio.charset.Charset;
 
 class WebServer {
-    String story = "Story Time;<br>";
+    String story = "Story Time:<br>";
 
     public static void main(String args[]) {
         WebServer server = new WebServer(9000);
@@ -230,18 +230,57 @@ class WebServer {
                     // TODO: Include error handling here with a correct error code and
                     // a response that makes sense
 
-                }else if (request.contains("addline?")) {
-                    // This multiplies two numbers, there is NO error handling, so when
+                }else if (request.contains("addline")) {// i made it like this so i can specifiaclly deal with no ?
+                    // This is text input
                     // wrong data is given this just crashes
+                    // below is dealing with empty just addline no ? or equals or anything
+                    if(!request.contains("?")||!request.contains("=")){
+                        builder.append("HTTP/1.1 400 Bad Request\n");
+                        builder.append("Content-Type: text/html; charset=utf-8\n");
+                        builder.append("\n");
+                        builder.append(" You are missing a ? or = in your request please format as /addline?text=your_line_goes_here");
+                        response = builder.toString().getBytes();
+                        return response;
+                    }
+                    String newline = null;
+                    try {
 
-                    Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-                    // extract path parameters
-                    query_pairs = splitQuery(request.replace("addline?", ""));
 
-                    // extract required fields from parameters
-                    String newline = query_pairs.get("text");
+    Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+    // extract path parameters
+
+    query_pairs = splitQuery(request.replace("addline?", ""));
+    // extract required fields from parameters
+     newline = query_pairs.get("text");
+
+    if (newline == null) {// this is for something like .../addline?text=
+        builder.append("HTTP/1.1 400 \n");
+        builder.append("Content-Type: text/html; charset=utf-8\n");
+        builder.append("\n");
+        builder.append(" missing text please try again ");
+        response = builder.toString().getBytes();
+        return response;
+    }
+    // this is for an input like ..../addline?text=    <-- a bunch of white space
+    if (newline.trim().equals("")) {
+        builder.append("HTTP/1.1 400 \n");
+        builder.append("Content-Type: text/html; charset=utf-8\n");
+        builder.append("\n");
+        builder.append("empty text please try again ");
+        response = builder.toString().getBytes();
+        return response;
+    }
 
 
+} catch (Exception e) {
+builder.append("HTTP/1.1 400 \n");
+builder.append("Content-Type: text/html; charset=utf-8\n");
+builder.append("\n");
+builder.append("malformed text please try again with new text and no special characters ");
+response = builder.toString().getBytes();
+return response;
+
+}
                     // do math
                     story += newline;
                     story += "<br>";
